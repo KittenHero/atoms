@@ -188,7 +188,7 @@ gamestate_t* load(char * fn) {
 	init_game(data);
 	for (int i = 0; i < (data->max_turns - 1)/2; i++) {
 		move_data_t pos = {.raw_move = data->raw_move_data[i]};
-		data->moves->last = place_q(pos.component.x, pos.component.y, moves->last);
+		data->moves->last = place_q(pos.component.x, pos.component.y, data->moves->last, data);
 		next_turn(data);
 		if (data->game_over) {
             		return data;
