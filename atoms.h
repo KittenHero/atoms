@@ -17,19 +17,17 @@ typedef struct grid_t grid_t;
 typedef struct game_t game_t;
 typedef struct save_t save_t;
 typedef struct player_t player_t;
-typedef struct save_file_t save_file_t;
+typedef struct gamestate_t gamestate_t;
 typedef union move_data_t move_data_t;
 
 union move_data_t {
-	struct {
-		uint8_t x;
-		uint8_t y;
-		uint16_t padding;
-	} component; 
-	
-	
-	
-	uint32_t raw_move;
+    struct {
+        uint8_t x;
+        uint8_t y;
+        uint16_t padding;
+    } component; 
+    
+    uint32_t raw_move;
 };
 
 struct move_t {
@@ -40,7 +38,7 @@ struct move_t {
 };
 
 struct game_t {
-  move_t* moves;
+  move_t* last;
 };
 
 struct grid_t {
@@ -53,11 +51,27 @@ struct player_t {
   int grids_owned;
 };
 
-struct save_file_t {
+struct gamestate_t {
     uint8_t width;
     uint8_t height;
+    
+    player_t* player;
     uint8_t no_players;
+    
+    grid_t** board;
+    
     uint32_t* raw_move_data;
+    size_t capacity;
+    int turn;
+    game_t* moves;
+    
+    char* msg;
+    
+    int game_over = 0;
 };
-#endif
 
+static const char const* colour[] = {
+    "Red", "Green", "Purple", "Blue", "Yellow", "White"
+};
+
+#endif
