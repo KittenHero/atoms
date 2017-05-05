@@ -181,29 +181,29 @@ void undo(gamestate_t* data) {
 	
 	
 	move_t* last_move = final_extra(data->moves->last);
-	while (last_move != moves->last->parent) {
+	while (last_move != data->moves->last->parent) {
 		
 		free(last_move->extra);
 		uint8_t x = last_move->pos.component.x;
 		uint8_t y = last_move->pos.component.y;
 
-		if (board[y][x].atom_count)
-			player[whose_turn].grids_owned--;
-		board[y][x].owner = last_move->old_owner;
+		if (data->board[y][x].atom_count)
+			data->player[whose_turn].grids_owned--;
+		data->board[y][x].owner = last_move->old_owner;
 
 		if (last_move->old_owner) {
 			int lim = limit(x, y);
-			board[y][x].atom_count += lim - 1;
-			board[y][x].atom_count %= lim;
+			data->board[y][x].atom_count += lim - 1;
+			data->board[y][x].atom_count %= lim;
 
 			last_move->old_owner->grids_owned++;
 		} else {
-			board[y][x].atom_count = 0;
+			data->board[y][x].atom_count = 0;
 		}
 		last_move = last_move->parent;
 	}
-	free(moves->last);
-	moves->last = last_move;
+	free(data->moves->last);
+	data->moves->last = last_move;
 
 	print_turn(data->player, data->whose_turn);
 }
