@@ -67,10 +67,10 @@ struct gamestate_t {
     
     char* msg;
     
-    int game_over = 0;
+    int game_over;
 };
 
-static const char const* colour[] = {
+static const char * const colour[] = {
     "Red", "Green", "Purple", "Blue", "Yellow", "White"
 };
 
