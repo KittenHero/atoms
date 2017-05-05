@@ -1,8 +1,3 @@
-
-static const char const* colour[] = {
-	"Red", "Green", "Purple", "Blue", "Yellow", "White"
-};
-
 static const char* help = // won't you please
 	"\n"
 	"HELP displays this help message\n"
@@ -18,13 +13,12 @@ static const char* help = // won't you please
 	"LOAD <filename> loads a save file\n"
 	"PLAYFROM <turn> plays from n steps into the game\n";
 
-void print_turn() {
+void print_turn(player_t* player, uint8_t whose_turn) {
 	printf("%s's Turn\n\n", player[whose_turn].colour);
 }
 
-void print_grid() {
-	uint8_t w = data->width, h = data->height;
-
+void print_grid(grid_t** board, uint8_t w, uint8_t h) {
+	
 	char buffer[h + 1][w*3 + 2];
 	memset(buffer, ' ', h*(w*3 + 2));
 
@@ -49,7 +43,7 @@ void print_grid() {
 }
 
 
-void print_stats() {
+void print_stats(gamestate_t* data) {
 	if (!data) {
 		puts("Game Not In Progress\n");
 		return;
@@ -57,8 +51,8 @@ void print_stats() {
 
 	for (int i = 0; i < data->no_players; i++) {
 		printf("Player %s:\n", player[i].colour);
-		if (player[i].grids_owned || turn < data->no_players)
-			printf("Grid Count: %d\n\n", player[i].grids_owned);
+		if (data->player[i].grids_owned || turn < data->no_players)
+			printf("Grid Count: %d\n\n", data->player[i].grids_owned);
 		else
 			puts("Lost\n");
 	}
@@ -73,7 +67,7 @@ char* get_input() {
 	free(buffer);
 	return NULL;
 }
-void parseCommand(char* args) {
+gamestate_t* parseCommand(char* args, gamestate_t* data) {
 	int rest;
 	char first[MAX_LINE];
 	if (!sscanf(args, "%7s %n", first, &rest)) {
@@ -82,24 +76,36 @@ void parseCommand(char* args) {
 		puts(help);
 	} else if (!strcasecmp(first, "QUIT") && !args[rest]) {
 		puts("Bye!");
-		game_over = 1;
+		if (!data) data = calloc(1, sizeof(gamestate_t));
+		data->game_over = 1;
 	} else if (data && !strcasecmp(first, "DISPLAY")) {
-		print_grid();
+		print_grid(data->board, data->width, data->height);
 	} else if (!data && !strcasecmp(first, "START")) {
-		start(args + rest);
+		data = start(args + restgame);
+        if (data->msg = NULL) {
+            puts("Game Ready");
+        	print_turn(data);
+        } else {
+            puts(data->msg);
+            free(data);
+            data = NULL;
+        }
 	} else if (data && !strcasecmp(first, "PLACE")) {
-		place_v(args + rest);
+		place_v(args + rest, data);
+        if (data->msg) puts(data->msg), data->msg = NULL;
 	} else if (!strcasecmp(first, "UNDO") && !args[rest]) {
-		undo();
+		undo(data);
 	} else if (!strcasecmp(first, "STAT") && !args[rest]) {
-		print_stats();
+		print_stats(data);
 	} else if (data && sscanf(args, "SAVE %s %n", first, &rest) > 0 && !args[rest]) {
-		save(first);
+		save(first, data);
 	} else if (!data && sscanf(args, "LOAD %s %n", first, &rest) > 0 && !args[rest]) {
-		load(first);
+		data = load(first);
+        if (data->msg) puts(data->msg);
 	} else {
 		puts("Invalid command\n");
 	}
+	return data;
 }
 
 void save(char * fn) {
@@ -112,7 +118,7 @@ void save(char * fn) {
 	fwrite(&data->width, sizeof(uint8_t), 1, f);
 	fwrite(&data->height, sizeof(uint8_t), 1, f);
 	fwrite(&data->no_players, sizeof(uint8_t), 1, f);
-	fwrite(data->raw_move_data, sizeof(uint32_t), turn, f);
+	fwrite(data->raw_move_data, sizeof(uint32_t), data->turn, f);
 
 	fclose(f);
 	puts("Game Saved\n");
@@ -129,7 +135,7 @@ void load(char * fn) {
 		puts("Cannot Load Save\n");
 		return;
 	}
-	data = malloc(sizeof(save_file_t));
+	data = malloc(sizeof(gamestate_t));
 
 	data->raw_move_data = NULL;
 
@@ -141,42 +147,42 @@ void load(char * fn) {
 
 	char* input;
 	int more = 0;
-	turn = -1;
-	while (turn == -1) {
+	data->turn = -1;
+	while (data->turn == -1) {
 		input = get_input();
 		if (!input) continue;
 		if (!strcasecmp(input, "QUIT\n")) {
 			fclose(f);
 			free(input);
-			puts("Bye!");
-			game_over = 1;
-			return;
+			data->msg = "Bye!";
+			data->game_over = 1;
+			return data;
 		} if (!strcasecmp(input, "PLAYFROM END\n")) {
 			fseek(f, 0, SEEK_END);
-			turn = (ftell(f) - HEADER_SIZE + 1)/sizeof(uint32_t);
+			data->turn = (ftell(f) - HEADER_SIZE + 1)/sizeof(uint32_t);
 			fseek(f, HEADER_SIZE, SEEK_SET);
-		} else if (!sscanf(input, "PLAYFROM %d %n", &turn, &more) || input[more]) {
-			turn = -1;
+		} else if (!sscanf(input, "PLAYFROM %d %n", &data->turn, &more) || input[more]) {
+			data->turn = -1;
 			puts("Invalid Command\n");
-		} else if (turn < 0) {
+		} else if (data->turn < 0) {
 			puts("Invalid Turn Number\n");
 		}
 		free(input);
 	}
 
-	max_turns = 2*turn + 1;
-	data->raw_move_data = malloc(max_turns*sizeof(uint32_t));
-	turn = fread(data->raw_move_data, sizeof(uint32_t), turn, f);
+	data->max_turns = 2*turn + 1;
+	data->raw_move_data = malloc(data->max_turns*sizeof(uint32_t));
+	data->turn = fread(data->raw_move_data, sizeof(uint32_t), data->turn, f);
 	fclose(f);
-	max_turns = 2*turn + 1;
+	data->max_turns = 2*data->turn + 1;
 	
 	
-	init_game();
-	for (int i = 0; i < (max_turns - 1)/2; i++) {
+	data = init_game(data);
+	for (int i = 0; i < (data->max_turns - 1)/2; i++) {
 		move_data_t pos = {.raw_move = data->raw_move_data[i]};
-		moves->moves = place_q(pos.component.x, pos.component.y, moves->moves);
-		next_turn();
-		if (game_over) return;
+		moves->last = place_q(pos.component.x, pos.component.y, moves->last);
+		next_turn(data);
+		if (data->game_over) return;
 	}
 	puts("Game Ready");
 	print_turn();
