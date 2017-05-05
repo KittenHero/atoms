@@ -78,7 +78,7 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 	int rest;
 	char first[MAX_LINE];
 	if (!sscanf(args, "%7s %n", first, &rest)) {
-		return;
+		return data;
 	} if (!strcasecmp(first, "HELP") && !args[rest]) {
 		puts(help);
 	} else if (!strcasecmp(first, "QUIT") && !args[rest]) {
@@ -91,7 +91,7 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 		data = start(args + rest);
         if (data->msg == NULL) {
             puts("Game Ready");
-        	print_turn(data);
+        	print_turn(data->player, data->whose_turn);
         } else {
             puts(data->msg);
             free(data);
@@ -115,7 +115,7 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 	return data;
 }
 
-void save(char * fn) {
+void save(char * fn, gamestate_t* data) {
 	if (fopen(fn, "rb")) {
 		puts("File Already Exists\n");
 		return;
