@@ -89,7 +89,7 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 		print_grid(data->board, data->width, data->height);
 	} else if (!data && !strcasecmp(first, "START")) {
 		data = start(args + rest);
-        if (data->msg == NULL) {
+        if (!data->msg) {
             puts("Game Ready");
         	print_turn(data->player, data->whose_turn);
         } else {
@@ -104,14 +104,17 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 		undo(data);
 	} else if (!strcasecmp(first, "STAT") && !args[rest]) {
 		print_stats(data);
-	} else if (data && sscanf(args, "SAVE %s %n", first, &rest) > 0 && !args[rest]) {
+	} else if (data && !strcasecmp(first, "SAVE") && sscanf(args + 4, "%s %n", first, &rest) > 0 && !args[rest]) {
 		save(first, data);
-	} else if (!data && sscanf(args, "LOAD %s %n", first, &rest) > 0 && !args[rest]) {
-		data = load(first);
-        if (data->msg) puts(data->msg);
-	} else {
-		puts("Invalid command\n");
-	}
+	} else if (!strcasecmp(first, "LOAD") && sscanf(args + 4, "%s %n", first, &rest) > 0 && !args[rest]) {
+		if (data) puts("Restart Application To Load Save\n");
+	    else data = load(first);
+        if (!data->msg){
+            puts("Game Ready");
+	        print_turn(data->player, data->whose_turn);
+        } else puts(data->msg), data->msg = NULL;
+	} else puts("Invalid command\n");
+    
 	return data;
 }
 
@@ -131,18 +134,16 @@ void save(char * fn, gamestate_t* data) {
 	puts("Game Saved\n");
 }
 
-void load(char * fn) {
-	if (data) {
-		puts("Restart Application To Load Save\n");
-		return;
-	}
+gamestate_t* load(char * fn) {
 
+
+	gamestate_t* data = calloc(1, sizeof(gamestate_t));
+	
 	FILE* f = fopen(fn, "rb");
 	if (!f) {
-		puts("Cannot Load Save\n");
-		return;
+		data->msg = "Cannot Load Save\n";
+		return data;
 	}
-	data = malloc(sizeof(gamestate_t));
 
 	data->raw_move_data = NULL;
 
@@ -189,10 +190,10 @@ void load(char * fn) {
 		move_data_t pos = {.raw_move = data->raw_move_data[i]};
 		moves->last = place_q(pos.component.x, pos.component.y, moves->last);
 		next_turn(data);
-		if (data->game_over) return;
+		if (data->game_over) {
+            return data;
+        }
 	}
-	puts("Game Ready");
-	print_turn();
 }
 
 int main(void) {
