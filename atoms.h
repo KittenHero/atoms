@@ -84,7 +84,7 @@ void load(char * fn);
 void clear_data(gamestate_t* data);
 gamestate_t* start(char* args);
 void place_v(char* args, gamestate_t* data);
-void undo(gamestate_t* data));
+void undo(gamestate_t* data);
 
 int main(void);
 
