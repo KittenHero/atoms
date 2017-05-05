@@ -51,9 +51,9 @@ void init_game(gamestate_t* data) {
 }
 
 gamestate_t* start(char* args) {
-    int k, w, h, n;
+	int k, w, h, n;
 	gamestate_t* data = calloc(1, sizeof(gamestate_t));
-    
+
 	if (sscanf(args, "%*s %*s %*s %n", &n) < 0) {
 		data->msg = "Missing Argument\n";
 		return data;
@@ -102,9 +102,9 @@ move_t* place_q(uint8_t x, uint8_t y, move_t* parent, gamestate_t* data) {
 	if (cur->old_owner)
 		cur->old_owner->grids_owned--;
 	data->board[y][x].owner = &data->player[data->whose_turn];
-	
+
 	if (check_winner(data)) {
-        printf("%s Wins!\n", data->player[data->whose_turn].colour);
+		printf("%s Wins!\n", data->player[data->whose_turn].colour);
 		data->game_over = 1;
 		return cur;
 	}
@@ -176,11 +176,11 @@ void undo(gamestate_t* data) {
 		data->whose_turn += data->no_players - 1; // this is how you mod subtract
 		data->whose_turn %= data->no_players;
 	} while (!data->player[data->whose_turn].grids_owned);
-	
-	
+
+
 	move_t* last_move = final_extra(data->moves->last);
 	while (last_move != data->moves->last->parent) {
-		
+
 		free(last_move->extra);
 		uint8_t x = last_move->pos.component.x;
 		uint8_t y = last_move->pos.component.y;
