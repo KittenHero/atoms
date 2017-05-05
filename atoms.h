@@ -61,7 +61,7 @@ struct gamestate_t {
     grid_t** board;
     
     uint32_t* raw_move_data;
-    size_t capacity;
+    size_t max_turns;
     int turn;
     uint8_t whose_turn;
     game_t* moves;
