@@ -207,8 +207,7 @@ int main(void) {
 	while ((!data || !data->game_over) && ((input = get_input()) || !feof(stdin))) {
 		data = parseCommand(input, data);
 		free(input);
-		if (data && data->no_players > 0)
-            print_grid(data->board, data->width, data->height);
+		if (data && data->no_players > 0) print_grid(data->board, data->width, data->height);
 	}
 	clear_data(data);
 }
