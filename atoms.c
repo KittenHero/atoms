@@ -1,8 +1,7 @@
 #include <stdio.h>
-#include "atoms.h"
 #include <stdlib.h>
-#include <string.h>
-#include <strings.h>
+
+#include "atoms.h"
 
 static inline move_t* final_extra(move_t* mv) {
 	while (mv->extra)
