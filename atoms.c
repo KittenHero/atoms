@@ -4,103 +4,97 @@
 #include <string.h>
 #include <strings.h>
 
+static inline move_t* final_extra(move_t* mv) {
+	while (mv->extra)
+		mv = mv->extra;
+	return mv;
+}
 
-static save_file_t* data = NULL;
-static grid_t** board = NULL;
-static player_t* player = NULL;
-static game_t* moves = NULL;
-static int turn;
-static size_t max_turns;
-static uint8_t whose_turn;
-static int game_over = 0;
+void clear_data(gamestate_t* data) {
+	if (data) {
+		if (data->board)
+			for (int i = 0; i < data->height; i++) {
+				free(data->board[i]);
+			}
+		free(data->board);
+		free(data->player);
 
-move_t* final_extra(move_t* mv) { while (mv->extra) mv = mv->extra; return mv; }
-
-void clear_data() {
-	if (board)
-		for (int i = 0; i < data->height; i++) {
-			free(board[i]);
-		}
-	free(board);
-	free(player);
-
-	if (data)
 		free(data->raw_move_data);
+		move_t* tmp;
+		if (data->moves)
+			for (move_t* cur = data->moves->last; cur; cur = tmp) {
+				cur = final_extra(cur);
+				tmp = cur->parent;
+				if (tmp && tmp->extra == cur)
+					tmp->extra = NULL;
+				free(cur);
+			}
+		free(data->moves);
+	}
 	free(data);
-
-	move_t* tmp;
-	if (moves)
-		for (move_t* cur = moves->moves; cur; cur = tmp) {
-			cur = final_extra(cur);
-			tmp = cur->parent;
-			if (tmp && tmp->extra == cur) tmp->extra = NULL;
-			free(cur);
-		}
-	free(moves);
 }
 
 
-void init_game() {
-	turn = whose_turn = 0;
+void init_game(data) {
+	data->turn = data->whose_turn = 0;
 
-	player = malloc(sizeof(player_t) * data->no_players);
+	data->player = malloc(sizeof(player_t) * data->no_players);
 	for (int i = 0; i < data->no_players; i++) {
-		player[i].colour = colour[i];
-		player[i].grids_owned = 0;
+		data->player[i].colour = colour[i];
+		data->player[i].grids_owned = 0;
 	}
 
-	board = malloc(sizeof(void *) * data->height);
+	data->board = malloc(sizeof(void *) * data->height);
 	for (int i = 0; i < data->height; i++) {
-		board[i] = calloc(sizeof(grid_t), data->width);
+		data->board[i] = calloc(sizeof(grid_t), data->width);
 	}
-	moves = malloc(sizeof(game_t));
-	moves->moves = NULL;
+	data->moves = malloc(sizeof(game_t));
+	data->moves->last = NULL;
+    return data;
 }
 
-void start(char* args) {
-	int k, w, h, n;
+gamestate_t* start(char* args) {
+    int k, w, h, n;
+	gamestate_t* data = calloc(1, sizeof(gamestate_t));
+    
 	if (sscanf(args, "%*s %*s %*s %n", &n) < 0) {
-		puts("Missing Argument\n");
-		return;
+		data->errormsg = "Missing Argument\n";
+		return data;
 	} if (args[n]) {
-		puts("Too Many Arguments\n");
-		return;
+		data->errormsg = "Too Many Arguments\n";
+		return data;
 	} if (sscanf(args, "%d %d %d", &k, &w, &h) != 3 || k > MAX_PLAYERS || k < MIN_PLAYERS || w < MIN_WIDTH || w > MAX_WIDTH || h < MIN_HEIGHT || h > MAX_HEIGHT) {
-		puts("Invalid Command Arguments\n");
-		return;
+		data->errormsg = "Invalid Command Arguments\n";
+		return data;
 	} if (k > w*h) {
-		puts("Cannot Start Game\n");
-		return;
+		data->errormsg = "Cannot Start Game\n";
+		return data;
 	}
 
-	data = malloc(sizeof(save_file_t));
 	data->width = w;
 	data->height = h;
 	data->no_players = k;
 
-	max_turns = w*h;
-	data->raw_move_data = malloc(max_turns*sizeof(uint32_t));
-	init_game();
-	puts("Game Ready");
-	print_turn();
+	data->max_turns = w*h;
+	data->raw_move_data = malloc(data->max_turns*sizeof(uint32_t));
+	return init_game(data);
 }
 
-int check_winner() {
-	if (turn < data->no_players)
+int check_winner(gamestate_t* data) {
+	if (data->nturn < data->no_players)
 		return 0;
 	for (int i = 0; i < data->no_players; i++)
-		if (i != whose_turn && player[i].grids_owned)
+		if (i != data->nwhose_turn && player[i].grids_owned)
 			return 0;
 	return 1;
 }
 
 // function-like macros are for scrubs
-int limit(int x, int y) { return 2 + (x && x + 1 < data->width) + (y && y + 1 < data->height); }
+static inline int limit(int x, int y, int w, int h) { return 2 + (x && x + 1 < w) + (y && y + 1 < h); }
 
-move_t* place_q(uint8_t x, uint8_t y, move_t* parent) {
+static move_t* place_q(uint8_t x, uint8_t y, move_t* parent, gamestate_t* data) {
 	if (game_over) return NULL;
-	int lim = limit(x, y);
-
+	int lim = limit(x, y, data->width, data->height);
 	move_t* cur = calloc(1, sizeof(move_t));
 	cur->pos.component.x = x;
 	cur->pos.component.y = y;
@@ -109,85 +103,85 @@ move_t* place_q(uint8_t x, uint8_t y, move_t* parent) {
 
 	if (cur->old_owner)
 		cur->old_owner->grids_owned--;
-	board[y][x].owner = &player[whose_turn];
+	data->board[y][x].owner = &data->player[data->whose_turn];
 	
-	if (check_winner()) {
-		printf("%s Wins!\n", player[whose_turn].colour);
-		game_over = 1;
+	if (check_winner(data)) {
+        printf("%s Wins!\n", curplayer.colour);
+		data->game_over = 1;
 		return cur;
 	}
 
-	if (++board[y][x].atom_count == lim) {
-		board[y][x].atom_count = 0;
-		board[y][x].owner = NULL;
+	if (++data->board[y][x].atom_count == lim) {
+		data->board[y][x].atom_count = 0;
+		data->board[y][x].owner = NULL;
 
 		move_t* tmp = cur;
 
-		if (y) tmp->extra = place_q(x, y - 1, tmp);
+		if (y) tmp->extra = place_q(x, y - 1, tmp, data);
 		tmp = final_extra(tmp);
 
-		if (x != data->width - 1) tmp->extra = place_q(x + 1, y, tmp);
+		if (x != data->width - 1) tmp->extra = place_q(x + 1, y, tmp, data);
 		tmp = final_extra(tmp);
 
-		if (y != data->height - 1) tmp->extra = place_q(x, y + 1, tmp);
+		if (y != data->height - 1) tmp->extra = place_q(x, y + 1, tmp, data);
 		tmp = final_extra(tmp);
 
-		if (x) tmp->extra = place_q(x - 1, y, tmp);
+		if (x) tmp->extra = place_q(x - 1, y, tmp, data);
 	} else {
-		player[whose_turn].grids_owned++;
+		data->player[data->whose_turn].grids_owned++;
 	}
 
 	return cur;
 }
-void next_turn() {
-	turn++;
+void next_turn(gamestate_t* data) {
+	data->turn++;
 
-	if (turn == max_turns) {
-		max_turns *= 2;
-		data->raw_move_data = realloc(data->raw_move_data, max_turns*sizeof(uint32_t));
+	if (data->turn == data->max_turns) {
+		data->max_turns *= 2;
+		data->raw_move_data = realloc(data->raw_move_data, data->max_turns*sizeof(uint32_t));
 	}
 	do {
-		whose_turn = (whose_turn + 1) % data->no_players;
-	} while (turn >= data->no_players && !player[whose_turn].grids_owned);
+		data->whose_turn = (data->whose_turn + 1) % data->no_players;
+	} while (data->turn >= data->no_players && !data->player[data->whose_turn].grids_owned);
 }
 
-void place_v(char* args) {
+void place_v(char* args, gamestate_t* data) {
 	int x, y, more;
 	if (sscanf(args, "%d %d %n", &x, &y, &more) < 2 || args[more] || x < 0 || y < 0 || x >= data->width || y >= data->height) {
-		puts("Invalid Coordinates\n");
+		data->msg = "Invalid Coordinates\n";
 		return;
 	}
 
-	if (board[y][x].owner && board[y][x].owner != &player[whose_turn]) {
-		puts("Cannot Place Atom Here\n");
+	if (board[y][x].owner && board[y][x].owner != &player[data->whose_turn]) {
+		data->msg = "Cannot Place Atom Here\n";
 		return;
 	}
 
-	moves->moves = place_q(x, y, moves->moves);
+	moves->moves = place_q(x, y, moves->moves, data);
 	if (game_over) return;
 	move_data_t move = {.raw_move = 0 };
 	move.component.x = x;
 	move.component.y = y;
-	data->raw_move_data[turn] = move.raw_move;
-	next_turn();
-	print_turn();
+	data->raw_move_data[data->turn] = move.raw_move;
+	next_turn(data);
+	print_turn(data->player, data->whose_turn);
 }
 
-void undo() {
-	if (!turn) {
+void undo(gamestate_t* data)) {
+	if (!data->turn) {
 		puts("Cannot Undo\n");
 		return;
 	}
 
-	turn--;//ing back time
+	data->turn--;//ing back time
 	do {//not worry about loss, since players cant kill self
-		whose_turn += data->no_players - 1; // this is how you mod subtract
-		whose_turn %= data->no_players;
-	} while (!player[whose_turn].grids_owned);
+		data->whose_turn += data->no_players - 1; // this is how you mod subtract
+		data->whose_turn %= data->no_players;
+	} while (!data->player[data->whose_turn].grids_owned);
 	
 	
-	move_t* last_move = final_extra(moves->moves);
-	while (last_move != moves->moves->parent) {
+	move_t* last_move = final_extra(data->moves->last);
+	while (last_move != moves->last->parent) {
 		
 		free(last_move->extra);
 		uint8_t x = last_move->pos.component.x;
@@ -208,19 +202,23 @@ void undo() {
 		}
 		last_move = last_move->parent;
 	}
-	free(moves->moves);
-	moves->moves = last_move;
+	free(moves->last);
+	moves->last = last_move;
 
-	print_turn();
+	print_turn(data->player, data->whose_turn);
 }
 
 int main(void) {
-	puts("Type HELP to list commands");
-	char* input;
-	while (!game_over && ((input = get_input()) || !feof(stdin))) {
-		parseCommand(input);
+	
+	char* input = "Type HELP to list commands";
+    puts(input);
+    
+    gamestate_t* data = NULL;
+	while ((!data || !data->game_over) && ((input = get_input()) || !feof(stdin))) {
+		data = parseCommand(input, data);
 		free(input);
-		if (board) print_grid();
+		if (data)
+            print_grid(data->board, data->width, data->height);
 	}
-	clear_data();
+	clear_data(data);
 }
