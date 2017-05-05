@@ -90,9 +90,7 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 		print_grid(data->board, data->width, data->height);
 	} else if (!data && !strcasecmp(first, "START")) {
 		data = start(args + rest);
-        	if (!data) {
-			puts("Cannot Load Save\n");
-		} else if (!data->msg) {
+        	if (!data->msg) {
         	    puts("Game Ready");
         		print_turn(data->player, data->whose_turn);
         	} else {
@@ -112,7 +110,9 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 	} else if (!strcasecmp(first, "LOAD") && sscanf(args, "%*4c %s %n", first, &rest) > 0 && !args[rest]) {
 		if (data) puts("Restart Application To Load Save\n");
 	    	else data = load(first);
-  		if (!data->msg){
+  		if (!data) {
+			puts("Cannot Load Save\n");
+		} else if (!data->msg){
             		puts("Game Ready");
 	        	print_turn(data->player, data->whose_turn);
         	} else puts(data->msg), data->msg = NULL;
