@@ -207,18 +207,3 @@ void undo(gamestate_t* data) {
 
 	print_turn(data->player, data->whose_turn);
 }
-
-int main(void) {
-	
-	char* input = "Type HELP to list commands";
-    puts(input);
-    
-    gamestate_t* data = NULL;
-	while ((!data || !data->game_over) && ((input = get_input()) || !feof(stdin))) {
-		data = parseCommand(input, data);
-		free(input);
-		if (data)
-            print_grid(data->board, data->width, data->height);
-	}
-	clear_data(data);
-}
