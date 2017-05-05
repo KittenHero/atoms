@@ -188,11 +188,11 @@ void undo(gamestate_t* data) {
 		uint8_t y = last_move->pos.component.y;
 
 		if (data->board[y][x].atom_count)
-			data->player[whose_turn].grids_owned--;
+			data->player[data->whose_turn].grids_owned--;
 		data->board[y][x].owner = last_move->old_owner;
 
 		if (last_move->old_owner) {
-			int lim = limit(x, y);
+			int lim = limit(x, y, data->width, data->height);
 			data->board[y][x].atom_count += lim - 1;
 			data->board[y][x].atom_count %= lim;
 
