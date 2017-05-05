@@ -1,3 +1,7 @@
+#include <stdio.h>
+
+#include "atoms.h"
+
 static const char* help = // won't you please
 	"\n"
 	"HELP displays this help message\n"
