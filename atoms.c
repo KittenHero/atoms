@@ -33,8 +33,7 @@ void clear_data(gamestate_t* data) {
 	free(data);
 }
 
-
-gamestate_t* init_game(gamestate_t* data) {
+void init_game(gamestate_t* data) {
 	data->turn = data->whose_turn = 0;
 
 	data->player = malloc(sizeof(player_t) * data->no_players);
@@ -49,7 +48,6 @@ gamestate_t* init_game(gamestate_t* data) {
 	}
 	data->moves = malloc(sizeof(game_t));
 	data->moves->last = NULL;
-    return data;
 }
 
 gamestate_t* start(char* args) {
@@ -76,7 +74,8 @@ gamestate_t* start(char* args) {
 
 	data->max_turns = w*h;
 	data->raw_move_data = malloc(data->max_turns*sizeof(uint32_t));
-	return init_game(data);
+	init_game(data);
+	return data;
 }
 
 int check_winner(gamestate_t* data) {
