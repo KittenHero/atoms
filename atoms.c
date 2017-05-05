@@ -58,16 +58,16 @@ gamestate_t* start(char* args) {
 	gamestate_t* data = calloc(1, sizeof(gamestate_t));
     
 	if (sscanf(args, "%*s %*s %*s %n", &n) < 0) {
-		data->errormsg = "Missing Argument\n";
+		data->msg = "Missing Argument\n";
 		return data;
 	} if (args[n]) {
-		data->errormsg = "Too Many Arguments\n";
+		data->msg = "Too Many Arguments\n";
 		return data;
 	} if (sscanf(args, "%d %d %d", &k, &w, &h) != 3 || k > MAX_PLAYERS || k < MIN_PLAYERS || w < MIN_WIDTH || w > MAX_WIDTH || h < MIN_HEIGHT || h > MAX_HEIGHT) {
-		data->errormsg = "Invalid Command Arguments\n";
+		data->msg = "Invalid Command Arguments\n";
 		return data;
 	} if (k > w*h) {
-		data->errormsg = "Cannot Start Game\n";
+		data->msg = "Cannot Start Game\n";
 		return data;
 	}
 
