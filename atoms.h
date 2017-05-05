@@ -81,6 +81,7 @@ void print_stats(gamestate_t* data);
 void save(char * fn, gamestate_t* data);
 gamestate_t*  load(char * fn);
 
+void init_game(gamestate_t* data);
 void clear_data(gamestate_t* data);
 gamestate_t* start(char* args);
 void place_v(char* args, gamestate_t* data);
