@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "atoms.h"
 
@@ -54,8 +55,8 @@ void print_stats(gamestate_t* data) {
 	}
 
 	for (int i = 0; i < data->no_players; i++) {
-		printf("Player %s:\n", player[i].colour);
-		if (data->player[i].grids_owned || turn < data->no_players)
+		printf("Player %s:\n", data->player[i].colour);
+		if (data->player[i].grids_owned || data->turn < data->no_players)
 			printf("Grid Count: %d\n\n", data->player[i].grids_owned);
 		else
 			puts("Lost\n");
