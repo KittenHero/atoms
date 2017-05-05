@@ -58,7 +58,7 @@ void print_stats(gamestate_t* data) {
 	}
 }
 
-char* get_input() {
+static char* get_input() {
 	char* buffer = malloc(MAX_LINE);
 
 	if (fgets(buffer, MAX_LINE, stdin))
