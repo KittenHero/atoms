@@ -1,2 +1,2 @@
 atoms: atoms.c atoms.h
-	clang -Wall -Werror -pedantic-errors -std=c11 -g -fsanitize=address -o atoms atoms.c
+	clang -Wall -Werror -ferror-limit=3 -pedantic-errors -std=c11 -g -fsanitize=address -o atoms atoms.c
