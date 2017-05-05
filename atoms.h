@@ -84,8 +84,11 @@ gamestate_t*  load(char * fn);
 void init_game(gamestate_t* data);
 void clear_data(gamestate_t* data);
 gamestate_t* start(char* args);
+
+move_t* place_q(uint8_t x, uint8_t y, move_t* parent, gamestate_t* data);
 void place_v(char* args, gamestate_t* data);
 void undo(gamestate_t* data);
+void next_turn(gamestate_t* data);
 
 int main(void);
 
