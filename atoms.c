@@ -157,8 +157,8 @@ void place_v(char* args, gamestate_t* data) {
 		return;
 	}
 
-	moves->moves = place_q(x, y, moves->moves, data);
-	if (game_over) return;
+	moves->last = place_q(x, y, moves->last, data);
+	if (data->game_over) return;
 	move_data_t move = {.raw_move = 0 };
 	move.component.x = x;
 	move.component.y = y;
