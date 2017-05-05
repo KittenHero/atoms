@@ -167,7 +167,7 @@ void place_v(char* args, gamestate_t* data) {
 	print_turn(data->player, data->whose_turn);
 }
 
-void undo(gamestate_t* data)) {
+void undo(gamestate_t* data) {
 	if (!data->turn) {
 		puts("Cannot Undo\n");
 		return;
