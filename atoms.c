@@ -35,7 +35,7 @@ void clear_data(gamestate_t* data) {
 }
 
 
-void init_game(data) {
+gamestate_t* init_game(gamestate_t* data) {
 	data->turn = data->whose_turn = 0;
 
 	data->player = malloc(sizeof(player_t) * data->no_players);
