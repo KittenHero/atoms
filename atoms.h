@@ -78,8 +78,8 @@ static const char * const colour[] = {
 void print_turn(player_t* player, uint8_t whose_turn);
 void print_grid(grid_t** board, uint8_t w, uint8_t h);
 void print_stats(gamestate_t* data);
-void save(char * fn);
-void load(char * fn);
+void save(char * fn, gamestate_t* data);
+gamestate_t*  load(char * fn);
 
 void clear_data(gamestate_t* data);
 gamestate_t* start(char* args);
