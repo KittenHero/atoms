@@ -88,7 +88,7 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 		print_grid(data->board, data->width, data->height);
 	} else if (!data && !strcasecmp(first, "START")) {
 		data = start(args + rest);
-        if (data->msg = NULL) {
+        if (data->msg == NULL) {
             puts("Game Ready");
         	print_turn(data);
         } else {

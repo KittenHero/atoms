@@ -1,4 +1,4 @@
-SHELL=/usr/bin/bash -O globstar
+SHELL=/bin/bash -O globstar
 
 CC=clang
 CFLAGS=-std=c11 -Wall -Wextra -Werror -pedantic-errors -ferror-limit=3
