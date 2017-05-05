@@ -90,7 +90,9 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 		print_grid(data->board, data->width, data->height);
 	} else if (!data && !strcasecmp(first, "START")) {
 		data = start(args + rest);
-        	if (!data->msg) {
+        	if (!data) {
+			puts("Cannot Load Save\n");
+		} else if (!data->msg) {
         	    puts("Game Ready");
         		print_turn(data->player, data->whose_turn);
         	} else {
@@ -141,8 +143,8 @@ gamestate_t* load(char * fn) {
 	
 	FILE* f = fopen(fn, "rb");
 	if (!f) {
-		data->msg = "Cannot Load Save\n";
-		return data;
+		free(data);
+		return NULL;
 	}
 
 	data->raw_move_data = NULL;
