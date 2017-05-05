@@ -155,8 +155,8 @@ gamestate_t* load(char * fn) {
 
 	char* input;
 	int more = 0;
-	data->turn = -1;
-	while (data->turn == -1) {
+	int turn = -1;
+	while (turn == -1) {
 		input = get_input();
 		if (!input) continue;
 		if (!strcasecmp(input, "QUIT\n")) {
@@ -167,12 +167,12 @@ gamestate_t* load(char * fn) {
 			return data;
 		} if (!strcasecmp(input, "PLAYFROM END\n")) {
 			fseek(f, 0, SEEK_END);
-			data->turn = (ftell(f) - HEADER_SIZE + 1)/sizeof(uint32_t);
+			turn = (ftell(f) - HEADER_SIZE + 1)/sizeof(uint32_t);
 			fseek(f, HEADER_SIZE, SEEK_SET);
-		} else if (!sscanf(input, "PLAYFROM %d %n", &data->turn, &more) || input[more]) {
-			data->turn = -1;
+		} else if (!sscanf(input, "PLAYFROM %zd %n", &turn, &more) || input[more]) {
+			turn = -1;
 			puts("Invalid Command\n");
-		} else if (data->turn < 0) {
+		} else if (turn < 0) {
 			puts("Invalid Turn Number\n");
 		}
 		free(input);
@@ -180,9 +180,9 @@ gamestate_t* load(char * fn) {
 
 	data->max_turns = 2*turn + 1;
 	data->raw_move_data = malloc(data->max_turns*sizeof(uint32_t));
-	data->turn = fread(data->raw_move_data, sizeof(uint32_t), data->turn, f);
+	data->turn = fread(data->raw_move_data, sizeof(uint32_t), turn, f);
 	fclose(f);
-	data->max_turns = 2*data->turn + 1;
+	data->max_turns = 2*turn + 1;
 	
 	
 	data = init_game(data);
@@ -191,8 +191,8 @@ gamestate_t* load(char * fn) {
 		moves->last = place_q(pos.component.x, pos.component.y, moves->last);
 		next_turn(data);
 		if (data->game_over) {
-            return data;
-        }
+            		return data;
+        	}
 	}
 }
 
