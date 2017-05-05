@@ -106,7 +106,7 @@ static move_t* place_q(uint8_t x, uint8_t y, move_t* parent, gamestate_t* data) 
 	data->board[y][x].owner = &data->player[data->whose_turn];
 	
 	if (check_winner(data)) {
-        printf("%s Wins!\n", curplayer.colour);
+        printf("%s Wins!\n", data->player[data->whose_turn].colour);
 		data->game_over = 1;
 		return cur;
 	}
@@ -152,7 +152,7 @@ void place_v(char* args, gamestate_t* data) {
 		return;
 	}
 
-	if (board[y][x].owner && board[y][x].owner != &player[data->whose_turn]) {
+	if (data->board[y][x].owner && data->board[y][x].owner != &data->player[data->whose_turn]) {
 		data->msg = "Cannot Place Atom Here\n";
 		return;
 	}
