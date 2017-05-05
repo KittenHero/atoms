@@ -25,7 +25,7 @@ void print_turn(player_t* player, uint8_t whose_turn) {
 }
 
 void print_grid(grid_t** board, uint8_t w, uint8_t h) {
-	
+
 	char buffer[h + 1][w*3 + 2];
 	memset(buffer, ' ', h*(w*3 + 2));
 
@@ -90,17 +90,17 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 		print_grid(data->board, data->width, data->height);
 	} else if (!data && !strcasecmp(first, "START")) {
 		data = start(args + rest);
-        	if (!data->msg) {
-        	    puts("Game Ready");
-        		print_turn(data->player, data->whose_turn);
-        	} else {
-            		puts(data->msg);
-            		free(data);
-            		data = NULL;
-        	}
+		if (!data->msg) {
+			puts("Game Ready");
+			print_turn(data->player, data->whose_turn);
+		} else {
+			puts(data->msg);
+			free(data);
+			data = NULL;
+		}
 	} else if (data && !strcasecmp(first, "PLACE")) {
 		place_v(args + rest, data);
-        	if (data->msg) puts(data->msg), data->msg = NULL;
+		if (data->msg) puts(data->msg), data->msg = NULL;
 	} else if (!strcasecmp(first, "UNDO") && !args[rest]) {
 		undo(data);
 	} else if (!strcasecmp(first, "STAT") && !args[rest]) {
@@ -109,13 +109,13 @@ gamestate_t* parseCommand(char* args, gamestate_t* data) {
 		save(first, data);
 	} else if (!strcasecmp(first, "LOAD") && sscanf(args, "%*4c %s %n", first, &rest) > 0 && !args[rest]) {
 		if (data) puts("Restart Application To Load Save\n");
-	    	else data = load(first);
-  		if (!data) {
+		else data = load(first);
+		if (!data) {
 			puts("Cannot Load Save\n");
 		} else if (!data->msg){
-            		puts("Game Ready");
-	        	print_turn(data->player, data->whose_turn);
-        	} else puts(data->msg), data->msg = NULL;
+			puts("Game Ready");
+			print_turn(data->player, data->whose_turn);
+		} else puts(data->msg), data->msg = NULL;
 	} else puts("Invalid command\n");
 	return data;
 }
@@ -140,7 +140,7 @@ gamestate_t* load(char * fn) {
 
 
 	gamestate_t* data = calloc(1, sizeof(gamestate_t));
-	
+
 	FILE* f = fopen(fn, "rb");
 	if (!f) {
 		free(data);
@@ -173,7 +173,7 @@ gamestate_t* load(char * fn) {
 			turn = (ftell(f) - HEADER_SIZE + 1)/sizeof(uint32_t);
 			fseek(f, HEADER_SIZE, SEEK_SET);
 		} else if (!strncasecmp(input, "PLAYFROM", 8) &&
-			       (!sscanf(input, "%*8c %d %n", &turn, &more) || input[more])) {
+				   (!sscanf(input, "%*8c %d %n", &turn, &more) || input[more])) {
 			turn = -1;
 			puts("Invalid Command\n");
 		} else if (turn < 0) {
@@ -187,29 +187,29 @@ gamestate_t* load(char * fn) {
 	data->turn = fread(data->raw_move_data, sizeof(uint32_t), turn, f);
 	fclose(f);
 	data->max_turns = 2*data->turn + 1;
-	
+
 	init_game(data);
 	for (size_t i = 0; i < (data->max_turns - 1)/2; i++) {
 		move_data_t pos = {.raw_move = data->raw_move_data[i]};
 		data->moves->last = place_q(pos.component.x, pos.component.y, data->moves->last, data);
 		next_turn(data);
 		if (data->game_over) {
-            		return data;
-        	}
+			return data;
+		}
 	}
 	return data;
 }
 
 int main(void) {
-	
-	char* input = "Type HELP to list commands";
-    puts(input);
-    
-    gamestate_t* data = NULL;
+
+	char* input = "enter HELP for list of commands";
+	puts(input);
+
+	gamestate_t* data = NULL;
 	while ((!data || !data->game_over) && ((input = get_input()) || !feof(stdin))) {
 		data = parseCommand(input, data);
 		free(input);
-		if (data && data->no_players > 0) print_grid(data->board, data->width, data->height);
+		if (data && data->no_players) print_grid(data->board, data->width, data->height);
 	}
 	clear_data(data);
 }
