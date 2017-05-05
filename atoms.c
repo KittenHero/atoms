@@ -84,7 +84,7 @@ int check_winner(gamestate_t* data) {
 	if (data->turn < data->no_players)
 		return 0;
 	for (int i = 0; i < data->no_players; i++)
-		if (i != data->whose_turn && player[i].grids_owned)
+		if (i != data->whose_turn && data->player[i].grids_owned)
 			return 0;
 	return 1;
 }
@@ -93,12 +93,12 @@ int check_winner(gamestate_t* data) {
 static inline int limit(int x, int y, int w, int h) { return 2 + (x && x + 1 < w) + (y && y + 1 < h); }
 
 static move_t* place_q(uint8_t x, uint8_t y, move_t* parent, gamestate_t* data) {
-	if (game_over) return NULL;
+	if (data->game_over) return NULL;
 	int lim = limit(x, y, data->width, data->height);
 	move_t* cur = calloc(1, sizeof(move_t));
 	cur->pos.component.x = x;
 	cur->pos.component.y = y;
-	cur->old_owner = board[y][x].owner;
+	cur->old_owner = data->board[y][x].owner;
 	cur->parent = parent;
 
 	if (cur->old_owner)
