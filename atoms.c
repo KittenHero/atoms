@@ -81,10 +81,10 @@ gamestate_t* start(char* args) {
 }
 
 int check_winner(gamestate_t* data) {
-	if (data->nturn < data->no_players)
+	if (data->turn < data->no_players)
 		return 0;
 	for (int i = 0; i < data->no_players; i++)
-		if (i != data->nwhose_turn && player[i].grids_owned)
+		if (i != data->whose_turn && player[i].grids_owned)
 			return 0;
 	return 1;
 }
