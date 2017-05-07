@@ -12,17 +12,18 @@ OPTIMIZE:=-o0 -march=native
 
 # For simple c files
 %: %.c
-@$(CC) $(SANS) $(CFLAGS) $(OPTIMIZE) $< -o $@
+	@$(CC) $(SANS) $(CFLAGS) $(OPTIMIZE) $< -o $@
 
 
-LS_NO_SPACE:=$(shell ls $(1) 2> /dev/null | grep -v ' ')
-UNIQ_DIRS:=$(shell echo $(dir $(1))|tr ' ' '\n'|sort|uniq|tr '\n' ' ')
+LS_NO_SPACE=$(shell ls $(1) 2> /dev/null | grep -v ' ')
+UNIQ_DIRS=$(shell echo $(dir $(1))|tr ' ' '\n'|sort|uniq|tr '\n' ' ')
 
 TARGET=./main
 BUILDPATH=.build/
 SRC:=$(call LS_NO_SPACE, **/*.c)
 OBJS:=$(addprefix $(BUILDPATH), $(SRC:.c=.o))
 BUILDSUBDIRS:=$(call UNIQ_DIRS, $(OBJS))
+
 TESTPATH=.tests/
 TESTS:=$(call LS_NO_SPACE, **/*.in)
 RESULTS:=$(addprefix $(TESTPATH), $(TESTS:.in=.out))
@@ -35,7 +36,6 @@ test: $(TARGET) $(RESULTS)
 
 clean:
 	rm -rf $(BUILDPATH) $(TARGET) $(TESTPATH)
-	@PATH="$$PATH:$(dir $(shell find / -name llvm-symbolizer 2> /dev/null))"
 
 $(TARGET): $(OBJS)
 	@echo linking $@
