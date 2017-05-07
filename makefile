@@ -1,43 +1,49 @@
-SHELL=/bin/bash -O globstar
+#author=Naris Rangsiyawaranon
+
+BASHPATH:=$(shell which bash)
+SHELL:=$(BASHPATH) -O globstar
+undefine BASHPATH
 
 CC=clang
 CFLAGS=-std=c11 -Wall -Wextra -Werror -pedantic-errors -ferror-limit=3
 LDLIBS=-lm -pthread
 SANS=-g -fsanitize=address
-OPTIMIZE=-o0 -march=native
+OPTIMIZE:=-o0 -march=native
 
-TARGET=./atoms
+# For simple c files
+%: %.c
+@$(CC) $(SANS) $(CFLAGS) $(OPTIMIZE) $< -o $@
+
+
+LS_NO_SPACE:=$(shell ls $(1) 2> /dev/null | grep -v ' ')
+UNIQ_DIRS:=$(shell echo $(dir $(1))|tr ' ' '\n'|sort|uniq|tr '\n' ' ')
+
+TARGET=./main
 BUILDPATH=.build/
-SRC=$(shell ls **/*.c 2> /dev/null | grep -v ' ')
-OBJS=$(addprefix $(BUILDPATH), $(SRC:.c=.o))
-BUILDSUBDIRS=$(shell echo $(dir $(OBJS))|sed 's/ /\n/g'|sort|uniq|sed 's/\n/ /g')
+SRC:=$(call LS_NO_SPACE, **/*.c)
+OBJS:=$(addprefix $(BUILDPATH), $(SRC:.c=.o))
+BUILDSUBDIRS:=$(call UNIQ_DIRS, $(OBJS))
+TESTPATH=.tests/
+TESTS:=$(call LS_NO_SPACE, **/*.in)
+RESULTS:=$(addprefix $(TESTPATH), $(TESTS:.in=.out))
+TESTSUBDIRS:=$(call UNIQ_DIRS, $(RESULTS))
 
-TESTS=$( shell ls **/*.in 2> /dev/null )
-RESULTS=$(TESTS:.in=.out)
 
-.PHONY: all clean FORCE panic
-all: $(TARGET)
+.PHONY: clean test FORCE 
 
-test: $(RESULTS)
+test: $(TARGET) $(RESULTS)
 
 clean:
-	rm -rf $(BUILDPATH) $(TARGET) $(RESULTS)
+	rm -rf $(BUILDPATH) $(TARGET) $(TESTPATH)
+	@PATH="$$PATH:$(dir $(shell find / -name llvm-symbolizer 2> /dev/null))"
 
 $(TARGET): $(OBJS)
 	@echo linking $@
 	@$(CC) $(SANS) $^ $(LDLIBS) -o $@
 
-$(BUILDSUBDIRS):
-	mkdir -p $@
+$(BUILDSUBDIRS) $(TESTSUBDIRS):
+	@mkdir -p $@
 
-# implicit rules for files with matching pattern and required prereq
-%.out: %.in %.exp $(TARGET) FORCE
-	@$(TARGET) < $< | tee $@ | diff - $(word 2, $^)
-	@echo passed $(basename $(notdir $@))
-
-%.out: %.in $(TARGET) FORCE
-	@$(TARGET) < $< > $@
-	@echo no errors $(basename $(notdir $@))
 
 # allows use of runtime vars in prereq via $$ escape
 .SECONDEXPANSION:
@@ -45,5 +51,14 @@ $(BUILDSUBDIRS):
 # folder timestamp changes when files inside are changed
 # fix: | tells make that the prereq is order only
 $(BUILDPATH)%.o: %.c $$(wildcard $$(dir $$@)*.h) | $$(dir $$@)
-	@echo building $@
+	@echo compiling $@
 	@$(CC) $(SANS) $(CFLAGS) $(OPTIMIZE) -c $< -o $@
+
+
+$(TESTPATH)%.out: %.in %.exp $(TARGET) FORCE | $$(dir $$@)
+	@$(TARGET) < $< | tee $@ | diff - $(word 2, $^) 
+	@echo passed $(basename $(notdir $@))  
+
+$(TESTPATH)%.out: %.in $(TARGET) FORCE | $$(dir $$@)
+	@$(TARGET) < $< > $@
+	@echo no errors $(basename $(notdir $@))
