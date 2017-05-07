@@ -6,19 +6,19 @@
 #include "atoms.h"
 
 static const char* help = // won't you please
-	"\n"
-	"HELP displays this help message\n"
-	"QUIT quits the current game\n"
-	"\n"
-	"DISPLAY draws the game board in terminal\n"
-	"START <number of players> <width> <height> starts the game\n"
-	"PLACE <x> <y> places an atom in a grid space\n"
-	"UNDO undoes the last move made\n"
-	"STAT displays game statistics\n"
-	"\n"
-	"SAVE <filename> saves the state of the game\n"
-	"LOAD <filename> loads a save file\n"
-	"PLAYFROM <turn> plays from n steps into the game\n";
+"\n"
+"HELP displays this help message\n"
+"QUIT quits the current game\n"
+"\n"
+"DISPLAY draws the game board in terminal\n"
+"START <number of players> <width> <height> starts the game\n"
+"PLACE <x> <y> places an atom in a grid space\n"
+"UNDO undoes the last move made\n"
+"STAT displays game statistics\n"
+"\n"
+"SAVE <filename> saves the state of the game\n"
+"LOAD <filename> loads a save file\n"
+"PLAYFROM <turn> plays from n steps into the game\n";
 
 void print_turn(player_t* player, uint8_t whose_turn) {
 	printf("%s's Turn\n\n", player[whose_turn].colour);
@@ -173,7 +173,7 @@ gamestate_t* load(char * fn) {
 			turn = (ftell(f) - HEADER_SIZE + 1)/sizeof(uint32_t);
 			fseek(f, HEADER_SIZE, SEEK_SET);
 		} else if (!strncasecmp(input, "PLAYFROM", 8) &&
-				   (!sscanf(input, "%*8c %d %n", &turn, &more) || input[more])) {
+				(!sscanf(input, "%*8c %d %n", &turn, &more) || input[more])) {
 			turn = -1;
 			puts("Invalid Command\n");
 		} else if (turn < 0) {
