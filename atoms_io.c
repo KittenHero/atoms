@@ -172,8 +172,7 @@ gamestate_t* load(char * fn) {
 			fseek(f, 0, SEEK_END);
 			turn = (ftell(f) - HEADER_SIZE + 1)/sizeof(uint32_t);
 			fseek(f, HEADER_SIZE, SEEK_SET);
-		} else if (!strncasecmp(input, "PLAYFROM", 8) &&
-				(!sscanf(input, "%*8c %d %n", &turn, &more) || input[more])) {
+		} else if (strncasecmp(input, "PLAYFROM", 8) || !sscanf(input, "%*8c %d %n", &turn, &more) || input[more]) {
 			turn = -1;
 			puts("Invalid Command\n");
 		} else if (turn < 0) {
