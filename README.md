@@ -1,5 +1,6 @@
 atoms
-to build:
-$ make
-to remove:
-$ make clean
+=====
+
+
++ build: `$ make`
++ remove: `$ make clean`
